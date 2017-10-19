@@ -1,0 +1,81 @@
+# Create a base freesurfer docker container 
+#
+# Note: The resulting container is ~8GB. 
+# 
+# Example build:
+#   docker build --no-cache -t vistalab/freesurfer .
+#
+# Create a base freesurfer docker container 
+#
+# Note: The resulting container is ~8GB. 
+# 
+# Example build:
+#   docker build --no-cache -t vistalab/freesurfer .
+#
+# Example usage:
+#   docker run -ti \
+#       -v /input/directory:/input \
+#       -v `/output/directory:/output \
+#       vistalab/freesurfer \
+#       mri_convert -at /input/inputvolume.m3z /output/outvolume.mgz
+#
+# Example usage:
+#   docker run --rm -ti \
+#       -v </input/directory>:/input \
+#       -v </output/directory>:/output \
+#       vistalab/recon-all -i /input/<input_file_name> -subjid <subject_id> -all 
+#
+
+
+# Start with ubuntu
+FROM amazonlinux:latest
+
+# Install dependencies for FS
+# Download FS_v6.0.0 from MGH and untar to /opt
+RUN yum update -y \
+    && yum install -y unzip aws-cli #\
+#    && yum install -y tcsh tar wget libgomp bc perl net-tools zip which 
+
+# COPY freesurfer-Linux-centos6_x86_64-stable-pub-v6.0.0.tar.gz /opt/
+#RUN cd /opt \
+#    && wget ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/6.0.0/freesurfer-Linux-centos6_x86_64-stable-pub-v6.0.0.tar.gz
+
+#RUN tar -xzvf /opt/freesurfer-Linux-centos6_x86_64-stable-pub-v6.0.0.tar.gz  -C /opt \
+#  && mkdir output
+    
+# Configure licence 
+#COPY license.txt /opt/freesurfer/
+
+# Copy the run script
+#COPY run /opt/run
+
+#RUN chmod +x /opt/run
+
+ADD fetch_and_run.sh /usr/local/bin/fetch_and_run.sh
+WORKDIR /tmp
+USER nobody
+
+# Configure basic freesurfer ENV
+#ENV OS Linux
+#ENV FS_OVERRIDE 0
+#ENV FIX_VERTEX_AREA= 
+#ENV SUBJECTS_DIR /output
+#ENV FSF_OUTPUT_FORMAT nii.gz
+#ENV MNI_DIR /opt/freesurfer/mni
+#ENV LOCAL_DIR /opt/freesurfer/local
+#ENV FREESURFER_HOME /opt/freesurfer
+#ENV FSFAST_HOME /opt/freesurfer/fsfast
+#ENV MINC_BIN_DIR /opt/freesurfer/mni/bin
+#ENV MINC_LIB_DIR /opt/freesurfer/mni/lib
+#ENV MNI_DATAPATH /opt/freesurfer/mni/data
+#ENV FMRI_ANALYSIS_DIR /opt/freesurfer/fsfast
+#ENV PERL5LIB /opt/freesurfer/mni/lib/perl5/5.8.5
+#ENV MNI_PERL5LIB /opt/freesurfer/mni/lib/perl5/5.8.5
+#ENV PATH /opt/freesurfer/bin:/opt/freesurfer/fsfast/bin:/opt/freesurfer/tktools:/opt/freesurfer/mni/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Configure bashrc to source FreeSurferEnv.sh
+#RUN source $FREESURFER_HOME/FreeSurferEnv.sh &>/dev/null
+
+# Set entrypoint to run the script
+# ENTRYPOINT ["/opt/run"]
+ENTRYPOINT ["/usr/local/bin/fetch_and_run.sh"]
